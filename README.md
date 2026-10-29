@@ -1,156 +1,269 @@
-# Business Document Intelligence Platform
+<div align="center">
 
-A GitHub-ready RAG application for business documents. Upload PDFs, DOCX, TXT, and CSV files to ask questions with evidence, compare documents, extract structured fields, and generate evidence-backed reports.
+# 📚 Document Reader RAG
 
-## Features
+### Turn business documents into answers, comparisons, structured data, and decision-ready reports.
 
-- **Document Q&A (RAG):** retrieve relevant chunks and return grounded answers with source citations.
-- **Cross-document comparison:** compare documents against a user-provided question or comparison brief.
-- **Structured extraction:** extract fields from retrieved evidence into validated JSON.
-- **Evidence-backed reports:** create Markdown reports with findings, supporting snippets, and source references.
-- **Local-first retrieval:** TF-IDF retrieval works without paid APIs.
-- **Optional LLM generation:** use OpenAI for stronger answers/extraction/report writing. Without an API key, the app provides evidence-first extractive responses.
-- **Source tracking:** every chunk retains filename, page/row where available, and chunk ID.
-- **Evaluation utilities:** inspect retrieval results and run a small retrieval evaluation script.
-- **Privacy-conscious defaults:** files are processed locally; OpenAI calls are only made when you configure an API key and trigger a generation action.
+**A business-focused document intelligence application built with Python, Streamlit, retrieval-augmented generation (RAG), and optional OpenAI-powered synthesis.**
 
-## Quick start
+<p>
+  <a href="https://github.com/gabrielvanlalbera/Document_Reader-RAG-"><img src="https://img.shields.io/badge/GitHub-Repository-181717?logo=github" alt="GitHub repository"></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10 or newer">
+  <img src="https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
+  <img src="https://img.shields.io/badge/AI-RAG-6C5CE7" alt="RAG">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
+</p>
 
-Requires Python 3.10–3.12 recommended.
+**[Features](#-what-you-can-do) · [How it works](#-how-it-works) · [Installation](#-get-started) · [Project structure](#-project-structure) · [Roadmap](#-roadmap)**
 
-```bash
-git clone https://github.com/YOUR_USERNAME/business-document-intelligence-platform.git
-cd business-document-intelligence-platform
+</div>
 
-python -m venv .venv
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-# macOS/Linux:
-source .venv/bin/activate
+---
 
-pip install -r requirements.txt
-copy .env.example .env   # Windows
-# cp .env.example .env   # macOS/Linux
+## 💡 The problem
 
-streamlit run app.py
+Business information is often scattered across long PDFs, policies, reports, contracts, and spreadsheets. Finding one important clause or comparing facts across multiple files can take far longer than it should.
+
+**Document Reader RAG** gives you one workspace to upload documents, retrieve relevant passages, and work with the evidence they contain. Instead of relying only on a model's general knowledge, the RAG workflow supplies retrieved document text to the answer-generation step.
+
+## ✨ What you can do
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>💬 Document Q&A</h3>
+      Ask questions in natural language and inspect the retrieved passages supporting the answer. Source filenames and page/row locations are retained where available.
+    </td>
+    <td width="50%" valign="top">
+      <h3>🔎 Cross-document comparison</h3>
+      Search across uploaded files for similarities, differences, and missing evidence around a comparison brief.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🧾 Structured extraction</h3>
+      Request fields such as company name, contract dates, fees, renewal terms, or notice periods. Export the result as JSON for further processing.
+    </td>
+    <td width="50%" valign="top">
+      <h3>📊 Evidence-backed reports</h3>
+      Build a report around a business question and download the result as Markdown, together with the evidence used by the workflow.
+    </td>
+  </tr>
+</table>
+
+### 📂 Supported file types
+
+- **PDF** (`.pdf`)
+- **Microsoft Word** (`.docx`)
+- **Plain text / Markdown** (`.txt`, `.md`)
+- **CSV** (`.csv`)
+
+> **PDF note:** Text-based PDFs are supported. Scanned or image-only PDFs need OCR preprocessing; OCR is not included in this version.
+
+## 🧭 How it works
+
+```mermaid
+flowchart TD
+    A[Upload PDF, DOCX, TXT, MD, or CSV] --> B[Extract text and source metadata]
+    B --> C[Split text into overlapping chunks]
+    C --> D[Build local TF-IDF index]
+    E[Ask a question or define a task] --> F[Retrieve relevant passages]
+    D --> F
+    F --> G{OpenAI API key configured?}
+    G -- Yes --> H[LLM synthesis using retrieved evidence]
+    G -- No --> I[Evidence-first fallback]
+    H --> J[Answer, comparison, extraction, or report]
+    I --> J
+    J --> K[Inspect evidence and download output]
 ```
 
-Open the local URL shown by Streamlit. You can use the app without an OpenAI key. For LLM-powered synthesis, add `OPENAI_API_KEY` to `.env`.
+### The current retrieval approach
 
-## Supported file types
+This version uses **TF-IDF keyword retrieval** as a lightweight, local baseline. It does not require a paid embedding API or a vector database. If `OPENAI_API_KEY` is configured, selected retrieved passages can be sent to the configured OpenAI model for grounded synthesis. Without the key, the app uses evidence-first fallback logic; that mode is more limited and may return extracted text rather than a polished summary.
 
-- PDF (`.pdf`)
-- Word (`.docx`)
-- Plain text (`.txt`, `.md`)
-- CSV (`.csv`)
+## 🚀 Get started
 
-Scanned/image-only PDFs need OCR before ingestion; OCR is not included in this starter version.
+### 1. Clone the repository
 
-## How it works
+```bash
+git clone https://github.com/gabrielvanlalbera/Document_Reader-RAG-.git
+cd Document_Reader-RAG-
+```
 
-1. **Ingest:** parse uploaded documents and preserve source metadata.
-2. **Chunk:** split text into overlapping passages.
-3. **Index:** build a TF-IDF index over the passages.
-4. **Retrieve:** rank passages for each question.
-5. **Generate:** optionally send only retrieved passages to an LLM with instructions to avoid unsupported claims.
-6. **Cite:** show source filename and page/row metadata alongside supporting snippets.
+### 2. Create and activate a virtual environment
 
-TF-IDF retrieval is intentionally used as a dependable, zero-API baseline. For a production deployment, swap in a dense embedding model and vector database, then evaluate both retrieval approaches on a domain-specific test set.
+**Windows PowerShell**
 
-## Project structure
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Create a local `.env` file from the example:
+
+**Windows PowerShell**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**macOS / Linux**
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and optionally add your OpenAI API key:
+
+```dotenv
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1-mini
+MAX_UPLOAD_MB=20
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=150
+TOP_K=5
+```
+
+The app can start without an API key. For LLM-powered generation, add your own key. API calls may incur charges. **Never commit `.env` or publish API keys.**
+
+### 5. Launch the app
+
+```bash
+python -m streamlit run app.py
+```
+
+Open the local URL printed in your terminal, usually `http://localhost:8501`.
+
+### 6. Try the included demo documents
+
+In the **Ingest documents** tab, upload the sample files from `sample_data/`:
+
+- `acme_company_overview.txt`
+- `acme_refund_policy.txt`
+- `acme_q1_summary.txt`
+
+These documents describe a **fictional** company and contain synthetic values for testing. They are safe starter examples—not real business records.
+
+## 🧪 Example questions to try
+
+| Goal | Example prompt |
+|---|---|
+| Learn about a company | “What does the company do, and what are its stated priorities?” |
+| Find a policy | “What is the return window and how long do refunds take?” |
+| Compare documents | “Compare renewal terms, fees, and termination rights across these agreements.” |
+| Extract fields | `Company name`, `Effective date`, `Annual fee`, `Auto-renewal` |
+| Prepare a report | “Summarize Q1 performance, risks, and unanswered questions.” |
+
+For best results, ask questions that match the information actually present in the uploaded documents. Always inspect the retrieved evidence for important answers.
+
+## 🧰 Tech stack
+
+| Component | Technology | Role |
+|---|---|---|
+| Interface | Streamlit | Interactive multi-workflow UI |
+| Language | Python | Application logic and document workflows |
+| Parsing | pypdf, python-docx, pandas | Extract text and tabular records |
+| Chunking | Custom Python utilities | Split text while retaining source metadata |
+| Retrieval | scikit-learn TF-IDF | Rank passages relevant to a query |
+| Optional generation | OpenAI API | Synthesize answers from retrieved evidence |
+| Testing | pytest | Unit tests for chunking and retrieval |
+
+## 🗂️ Project structure
 
 ```text
-business-document-intelligence-platform/
-├── app.py
-├── requirements.txt
-├── .env.example
-├── .gitignore
+Document_Reader-RAG-/
+├── app.py                       # Streamlit application
+├── requirements.txt             # Python dependencies
+├── .env.example                 # Environment variable template
+├── .gitignore                   # Excludes local secrets and environments
 ├── LICENSE
 ├── README.md
 ├── src/
-│   ├── __init__.py
-│   ├── config.py
-│   ├── ingestion.py
-│   ├── chunking.py
-│   ├── retrieval.py
-│   ├── llm.py
-│   ├── workflows.py
-│   └── evaluation.py
+│   ├── config.py                # App settings
+│   ├── ingestion.py             # PDF, DOCX, TXT, MD, and CSV parsing
+│   ├── chunking.py              # Text chunking and metadata
+│   ├── retrieval.py             # TF-IDF search
+│   ├── llm.py                   # Optional grounded generation
+│   ├── workflows.py             # Q&A, comparison, extraction, reporting
+│   └── evaluation.py            # Retrieval metric helpers
 ├── tests/
 │   ├── test_chunking.py
 │   └── test_retrieval.py
 ├── scripts/
 │   └── evaluate_retrieval.py
-└── sample_data/
-    ├── acme_company_overview.txt
-    ├── acme_refund_policy.txt
-    └── acme_q1_summary.txt
+└── sample_data/                 # Synthetic demo documents
 ```
 
-## Main workflows
+## ✅ Test and evaluate
 
-### 1. Document Q&A
-Ask a question and receive an answer based on the highest-ranked document passages. When OpenAI is configured, the answer is synthesized from retrieved context. Otherwise, the app returns the evidence snippets directly.
-
-### 2. Cross-document comparison
-Choose a comparison question such as *"Compare renewal terms, fees, and termination rights across these agreements."* The system retrieves evidence across all indexed documents and creates a side-by-side evidence summary.
-
-### 3. Structured data extraction
-Provide a list of fields, for example:
-
-```text
-Company name
-Contract start date
-Contract end date
-Annual fee
-Auto-renewal
-Termination notice period
-```
-
-The system returns JSON containing each requested field, an evidence quote, source, and confidence status. Missing information should be returned as `Not found`, not guessed.
-
-### 4. Evidence-backed reporting
-Provide a report objective, for example *"Summarize Q1 performance, risks, and recommended follow-up questions."* The report contains an executive summary, findings, evidence, limitations, and open questions.
-
-## Configuration
-
-See `.env.example`.
-
-- `OPENAI_API_KEY`: optional API key for LLM synthesis.
-- `OPENAI_MODEL`: model name, default `gpt-4.1-mini`.
-- `MAX_UPLOAD_MB`: per-file upload limit, default `20`.
-- `CHUNK_SIZE`: approximate characters per chunk, default `1000`.
-- `CHUNK_OVERLAP`: overlap between chunks, default `150`.
-- `TOP_K`: number of passages retrieved by default, default `5`.
-
-## Run tests
+Run the unit tests:
 
 ```bash
-pytest -q
+python -m pytest -q
 ```
 
-## Evaluate retrieval
+Run the sample retrieval smoke test:
 
 ```bash
 python scripts/evaluate_retrieval.py
 ```
 
-The script uses the sample data and prints whether expected source documents appear among the top retrieved results. Treat this as a smoke test, not a benchmark.
+The retrieval script checks a few known queries against the synthetic sample documents. It is a **smoke test, not a comprehensive benchmark**. For a serious evaluation, create a test set from your target domain with questions, expected source passages, and criteria for answer faithfulness.
 
-## GitHub publishing checklist
+## 🌱 Roadmap
 
-1. Create an empty GitHub repository.
-2. Do **not** commit `.env`, API keys, private company files, or real customer documents.
-3. Replace `YOUR_USERNAME` in this README after creating the repository.
-4. Run tests and start the app locally.
-5. Add screenshots/GIFs to a `docs/` folder after testing with your own sample files.
-6. Add a short demo video and a sanitized evaluation report if using this for a portfolio.
+- [ ] Add dense semantic embeddings and compare retrieval quality against TF-IDF.
+- [ ] Add hybrid keyword + semantic search and optional reranking.
+- [ ] Improve answer-quality evaluation with retrieval recall, citation accuracy, and faithfulness metrics.
+- [ ] Add document previews and clearer extraction diagnostics.
+- [ ] Add persistent workspaces, authentication, and role-based access controls before multi-user deployment.
+- [ ] Add OCR support for scanned documents.
 
-## Security and limitations
+## 🔐 Privacy, security, and limitations
 
-- This is a portfolio MVP, not a certified enterprise records-management system.
-- Do not upload confidential, regulated, or personally identifiable data unless you have approval and suitable controls.
-- Uploaded files are handled in the running app process; this version does not implement persistent user accounts, access control, encryption at rest, or audit logging.
-- Treat document text as untrusted input. The generation prompt instructs the model to ignore instructions embedded in documents, but prompt injection cannot be eliminated by a prompt alone.
-- LLM outputs may be incorrect. Verify important claims against the displayed evidence.
-- Add authentication, authorization, file scanning, rate limiting, retention controls, and stronger evaluation before deployment.
+- This is a **portfolio MVP**, not a certified enterprise document-management system.
+- Uploaded files are processed by the running app. This version does not implement user accounts, access control, encrypted persistent storage, or audit logs.
+- When OpenAI generation is enabled, retrieved document passages are sent to the OpenAI API. Do not process confidential, regulated, or personal data unless you have the required approvals and controls.
+- Document text is untrusted input. Prompt instructions help reduce instruction-following from retrieved text but cannot eliminate prompt-injection risk.
+- Retrieval can miss relevant passages, and generated answers can still be wrong or incomplete. Verify important claims against the original document.
+- Before production deployment, add authentication, authorization, file scanning, rate limits, retention controls, monitoring, and domain-specific evaluation.
+
+## ☁️ Deployment
+
+The app can be deployed on a host that supports Python and Streamlit. For Streamlit Community Cloud, connect the GitHub repository, select `app.py` as the main file, and configure any required secrets in the deployment settings. Do not put secrets in source control.
+
+> GitHub Pages alone cannot run this Python/Streamlit backend; it hosts static websites. Use a Streamlit-capable hosting service for an interactive deployment.
+
+## 🤝 Contributing
+
+Ideas, bug reports, and pull requests are welcome. If you suggest a feature, include the use case it addresses and how it can be tested. Keep secrets and private source documents out of commits.
+
+## 📄 License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
+
+---
+
+<div align="center">
+
+**Built to make business documents easier to search, compare, and turn into evidence-backed decisions.**
+
+⭐ If this project is useful to you, consider giving the repository a star.
+
+</div>
